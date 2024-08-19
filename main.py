@@ -12,6 +12,8 @@ from fastapi.responses import StreamingResponse
 
 from openai import OpenAI
 
+# Načtení environmentálních proměnných ze souboru .env
+load_dotenv()
 
 # OpenAI client initialization
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -27,8 +29,6 @@ app = FastAPI()
 # OAuth2PasswordBearer pro získání tokenu z hlavičky Authorization
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-# Načtení environmentálních proměnných ze souboru .env
-load_dotenv()
 
 app = FastAPI()
 
