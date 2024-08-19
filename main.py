@@ -14,7 +14,7 @@ from openai import OpenAI
 
 
 # OpenAI client initialization
-client = OpenAI(api_key=OPENAI_API_KEY)
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Prompt message for the OpenAI model
 prompt_message = """Jsi robot NAO. Je ti 14 let. A žiješ v Český Budějovicích. 
