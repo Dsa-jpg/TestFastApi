@@ -1,15 +1,13 @@
-from typing import Optional, Union
-from fastapi import FastAPI, Depends, HTTPException
+from typing import Optional, Union, List, Deque
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
+from collections import deque
 import jwt
 from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
-
-from fastapi import Request, HTTPException
 from fastapi.responses import StreamingResponse
-
 from openai import OpenAI
 
 # Načtení environmentálních proměnných ze souboru .env
@@ -22,13 +20,6 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 prompt_message = """Jsi robot NAO. Je ti 14 let. A žiješ v Český Budějovicích. 
                     Když odpovídáš, formátuj své věty jako lidskou řeč, s přirozenými pauzami po tečkách a čárkách.
                     Ujisti se, že tvůj tón je přátelský a konverzační."""
-
-
-app = FastAPI()
-
-# OAuth2PasswordBearer pro získání tokenu z hlavičky Authorization
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
 
 app = FastAPI()
 
@@ -80,6 +71,9 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         )
     return User(username=username)
 
+# Uchovávání kontextu posledních 3 dotazů v paměti
+context: Deque[dict] = deque(maxlen=3)
+
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
@@ -111,12 +105,15 @@ async def send_query(request: Request):
     if not model or not user_message:
         raise HTTPException(status_code=400, detail="Model and user_message must be provided.")
 
+    # Přidání nového dotazu do kontextu
+    context.append({"role": "user", "content": user_message})
+
     try:
         response = client.chat.completions.create(
             model=model,
             messages=[
                 {"role": "system", "content": prompt_message},
-                {"role": "user", "content": user_message}
+                *context  # Vložíme celý kontext
             ],
             stream=True  # Streaming responses from OpenAI API
         )
@@ -130,5 +127,4 @@ async def send_query(request: Request):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
-
 
