@@ -7,6 +7,20 @@ from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
 
+from fastapi import Request, HTTPException
+from fastapi.responses import StreamingResponse
+
+from openai import OpenAI
+from config.settings import OPENAI_API_KEY, prompt_message
+
+# OpenAI client initialization
+client = OpenAI(api_key=OPENAI_API_KEY)
+
+# Prompt message for the OpenAI model
+prompt_message = """Jsi robot NAO. Je ti 14 let. A žiješ v Český Budějovicích. 
+                    Když odpovídáš, formátuj své věty jako lidskou řeč, s přirozenými pauzami po tečkách a čárkách.
+                    Ujisti se, že tvůj tón je přátelský a konverzační."""
+
 
 app = FastAPI()
 
@@ -85,3 +99,36 @@ def login(username: str):
         data={"sub": username}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+# Endpoint to send query to OpenAI
+@app.post("/sendquery")
+async def send_query(request: Request):
+
+    body = await request.json()
+    model = body.get("model")
+    user_message = body.get("user_message")
+
+    if not model or not user_message:
+        raise HTTPException(status_code=400, detail="Model and user_message must be provided.")
+
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": prompt_message},
+                {"role": "user", "content": user_message}
+            ],
+            stream=True  # Streaming responses from OpenAI API
+        )
+
+        async def generate_responses(response):
+            for chunk in response:
+                if chunk.choices[0].delta.content:
+                    yield chunk.choices[0].delta.content
+
+        return StreamingResponse(generate_responses(response), media_type="text/plain")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
+
+
