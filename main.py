@@ -11,7 +11,7 @@ from fastapi import Request, HTTPException
 from fastapi.responses import StreamingResponse
 
 from openai import OpenAI
-from config.settings import OPENAI_API_KEY, prompt_message
+
 
 # OpenAI client initialization
 client = OpenAI(api_key=OPENAI_API_KEY)
