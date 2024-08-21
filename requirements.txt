@@ -4,3 +4,4 @@ pyjwt
 python-dotenv
 openai
 pymongo[srv]
+dnspython
