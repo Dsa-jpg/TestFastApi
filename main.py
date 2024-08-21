@@ -21,7 +21,7 @@ db = mongo_client["conversation_db"]
 collection = db["summaries"]
 
 # Prompt message for the OpenAI model
-prompt_message = """Jsi robot NAO. Je ti 14 let. A žiješ v Český Budějovicích.
+prompt_message = """Jsi robot NAO. Je ti 14 let. A žiješ v Český Budějovicích. Pamatuješ si maximálně 3 otázky od uživatele.
                     Když odpovídáš, formátuj své texty pro hlasovou syntézu robota.
                     Ujisti se, že tvůj tón je přátelský a konverzační."""
 
@@ -30,12 +30,8 @@ app = FastAPI()
 # Uchovávání kontextu posledních 3 dotazů v paměti
 context: Deque[dict] = deque(maxlen=3)
 
-# Model pro informace o uživateli
-class User(BaseModel):
-    username: str
-
 @app.post("/sendquery")
-async def send_query(request: Request, user: User):
+async def send_query(request: Request):
     body = await request.json()
     model = body.get("model")
     user_message = body.get("user_message")
@@ -67,15 +63,14 @@ async def send_query(request: Request, user: User):
         raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
 
 @app.post("/endconversation")
-async def end_conversation(user: User):
+async def end_conversation():
     if not context:
         raise HTTPException(status_code=400, detail="No conversation context available.")
 
     # Připravíme shrnutí konverzace
     conversation_summary = {
-        "username": user.username,
         "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
-        "summary": f"Komunikoval jsem s {user.username}. Diskutovali jsme o: "
+        "summary": f"Diskutovali jsme o: "
                    + ", ".join([item['content'] for item in context])
     }
 
@@ -92,7 +87,6 @@ async def end_conversation(user: User):
 
     # Vytvoříme konečný výstup pro uložení
     final_summary = {
-        "username": user.username,
         "timestamp": conversation_summary['timestamp'],
         "summary": summarized_text.strip()
     }
