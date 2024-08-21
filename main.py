@@ -18,7 +18,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Prompt message for the OpenAI model
 prompt_message = """Jsi robot NAO. Je ti 14 let. A žiješ v Český Budějovicích. 
-                    Když odpovídáš, formátuj své věty jako lidskou řeč, s přirozenými pauzami po tečkách a čárkách.
+                    Když odpovídáš, formátuj své texty pro hlasovou syntézu robota.
                     Ujisti se, že tvůj tón je přátelský a konverzační."""
 
 app = FastAPI()
