@@ -98,7 +98,12 @@ async def end_conversation():
         # Uložení do MongoDB
         collection.insert_one(final_summary)
 
-        return final_summary
+        # Vrátíme shrnutí a ID nového dokumentu jako potvrzení
+        return {
+            "message": "Summary saved successfully",
+            "id": str(result.inserted_id),
+            "summary": final_summary["summary"]
+        }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saving summary to MongoDB: {str(e)}")
