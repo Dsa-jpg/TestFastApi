@@ -9,22 +9,29 @@ from openai import OpenAI
 from datetime import datetime
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
+
 # Načtení environmentálních proměnných ze souboru .env
 load_dotenv()
+
 # OpenAI client initialization
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
 # MongoDB client initialization
 uri = os.getenv("MONGO_URI")
 mongo_client = MongoClient(uri, server_api=ServerApi('1'))
 db = mongo_client["conversation_db"]
 collection = db["summaries"]
+
 # Prompt message for the OpenAI model
 prompt_message = """Jsi robot NAO. Je ti 14 let. A žiješ v Český Budějovicích.
                     Když odpovídáš, formátuj své texty pro hlasovou syntézu robota.
                     Ujisti se, že tvůj tón je přátelský a konverzační."""
+
 app = FastAPI()
+
 # Uchovávání kontextu posledních 3 dotazů v paměti
 context: Deque[dict] = deque(maxlen=3)
+
 @app.post("/sendquery")
 async def send_query(request: Request):
     body = await request.json()
@@ -50,6 +57,7 @@ async def send_query(request: Request):
         return StreamingResponse(generate_responses(response), media_type="text/plain")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
+      
 @app.post("/endconversation")
 async def end_conversation():
     if not context:
@@ -90,6 +98,7 @@ async def end_conversation():
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saving summary to MongoDB: {str(e)}")
+      
 @app.get("/")
 async def root():
     return {"message": "NAO robot API is running"}
