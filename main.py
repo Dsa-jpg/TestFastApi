@@ -84,7 +84,7 @@ async def end_conversation():
             ]
         )
 
-        # Access the summary text
+        # Access the summary text correctly
         summarized_text = summary_response.choices[0].message['content']
 
         # Final summary for MongoDB
