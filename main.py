@@ -87,7 +87,6 @@ async def end_conversation():
         }
 
         # Uložení do MongoDB
-        collection.insert_one(final_summary)
         result = collection.insert_one(final_summary)
 
         # Vrátíme shrnutí a ID nového dokumentu jako potvrzení
