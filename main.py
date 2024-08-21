@@ -67,38 +67,43 @@ async def end_conversation():
     if not context:
         raise HTTPException(status_code=400, detail="No conversation context available.")
 
-    # Připravíme shrnutí konverzace
+    # Prepare conversation summary
     conversation_summary = {
         "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
         "summary": f"Diskutovali jsme o: "
                    + ", ".join([item['content'] for item in context])
     }
 
-    # Získáme shrnutí pomocí OpenAI
-    summary_response = client.chat.completions.create(
-        model="gpt-4",
-        messages=[
-            {"role": "system", "content": "Shrň následující konverzaci do maximálně dvou vět."},
-            {"role": "user", "content": conversation_summary['summary']}
-        ]
-    )
-
-    # Opravený přístup k obsahu odpovědi
-    summarized_text = summary_response['choices'][0]['message']['content']
-
-    # Vytvoříme konečný výstup pro uložení
-    final_summary = {
-        "timestamp": conversation_summary['timestamp'],
-        "summary": summarized_text.strip()
-    }
-
-    # Uložení do MongoDB
     try:
-        collection.insert_one(final_summary)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error saving summary to MongoDB: {str(e)}")
+        # Request a summary from OpenAI
+        summary_response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "Shrň následující konverzaci do maximálně dvou vět."},
+                {"role": "user", "content": conversation_summary['summary']}
+            ]
+        )
 
-    return final_summary
+        # Access the summary text
+        summarized_text = summary_response.choices[0].message['content']
+
+        # Final summary for MongoDB
+        final_summary = {
+            "timestamp": conversation_summary['timestamp'],
+            "summary": summarized_text.strip()
+        }
+
+        # Save to MongoDB
+        try:
+            collection.insert_one(final_summary)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error saving summary to MongoDB: {str(e)}")
+
+        return final_summary
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
+
 
 @app.get("/")
 async def root():
