@@ -21,7 +21,7 @@ db = mongo_client["conversation_db"]
 collection = db["summaries"]
 
 # Prompt message for the OpenAI model
-prompt_message = """Jsi robot NAO. Je ti 14 let. A žiješ v Český Budějovicích. Pamatuješ si maximálně 3 otázky od uživatele.
+prompt_message = """Jsi robot NAO. Je ti 14 let. A žiješ v Český Budějovicích.
                     Když odpovídáš, formátuj své texty pro hlasovou syntézu robota.
                     Ujisti se, že tvůj tón je přátelský a konverzační."""
 
@@ -76,13 +76,14 @@ async def end_conversation():
 
     # Získáme shrnutí pomocí OpenAI
     summary_response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-4",
         messages=[
             {"role": "system", "content": "Shrň následující konverzaci do maximálně dvou vět."},
             {"role": "user", "content": conversation_summary['summary']}
         ]
     )
 
+    # Opravený přístup k obsahu odpovědi
     summarized_text = summary_response.choices[0].message['content']
 
     # Vytvoříme konečný výstup pro uložení
