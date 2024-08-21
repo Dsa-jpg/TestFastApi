@@ -87,7 +87,7 @@ async def end_conversation():
         )
         
         # Opravený přístup k obsahu odpovědi
-        summarized_text = summary_response.choices[0].message['content']
+        summarized_text = summary_response.choices[0].message.content
 
         # Vytvoříme konečný výstup pro uložení
         final_summary = {
