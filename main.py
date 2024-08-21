@@ -76,7 +76,7 @@ async def end_conversation():
 
     # Získáme shrnutí pomocí OpenAI
     summary_response = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": "Shrň následující konverzaci do maximálně dvou vět."},
             {"role": "user", "content": conversation_summary['summary']}
