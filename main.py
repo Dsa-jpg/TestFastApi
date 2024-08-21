@@ -8,6 +8,7 @@ from fastapi.responses import StreamingResponse
 from openai import OpenAI
 from datetime import datetime
 from pymongo import MongoClient
+from pymongo.server_api import ServerApi
 
 # Načtení environmentálních proměnných ze souboru .env
 load_dotenv()
@@ -16,7 +17,8 @@ load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # MongoDB client initialization
-mongo_client = MongoClient(os.getenv("MONGO_URI"))
+uri = os.getenv("MONGO_URI")
+mongo_client = MongoClient(uri, server_api=ServerApi('1'))
 db = mongo_client["conversation_db"]
 collection = db["summaries"]
 
@@ -67,15 +69,15 @@ async def end_conversation():
     if not context:
         raise HTTPException(status_code=400, detail="No conversation context available.")
 
-    # Prepare conversation summary
+    # Připravíme shrnutí konverzace
     conversation_summary = {
         "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
         "summary": f"Diskutovali jsme o: "
                    + ", ".join([item['content'] for item in context])
     }
 
+    # Získáme shrnutí pomocí OpenAI
     try:
-        # Request a summary from OpenAI
         summary_response = client.chat.completions.create(
             model="gpt-4",
             messages=[
@@ -83,27 +85,23 @@ async def end_conversation():
                 {"role": "user", "content": conversation_summary['summary']}
             ]
         )
+        
+        # Opravený přístup k obsahu odpovědi
+        summarized_text = summary_response.choices[0].message['content']
 
-        # Access the summary text correctly
-        summarized_text = summary_response.choices[0].message.content
-
-        # Final summary for MongoDB
+        # Vytvoříme konečný výstup pro uložení
         final_summary = {
             "timestamp": conversation_summary['timestamp'],
             "summary": summarized_text.strip()
         }
 
-        # Save to MongoDB
-        try:
-            collection.insert_one(final_summary)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Error saving summary to MongoDB: {str(e)}")
+        # Uložení do MongoDB
+        collection.insert_one(final_summary)
 
         return final_summary
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
-
+        raise HTTPException(status_code=500, detail=f"Error saving summary to MongoDB: {str(e)}")
 
 @app.get("/")
 async def root():
