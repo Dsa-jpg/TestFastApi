@@ -24,9 +24,9 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 # MongoDB client initialization
 uri = os.getenv("MONGO_URI")
 mongo_client = MongoClient(uri, server_api=ServerApi('1'))
-db = mongo_client["conversation_db"]
+db1 = mongo_client["conversation_db"]
 db = mongo_client["login_db"]
-collection = db["summaries"]
+collection = db1["summaries"]
 users_collection = db["users"] 
 
 # Prompt message for the OpenAI model
