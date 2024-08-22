@@ -9,6 +9,7 @@ from openai import OpenAI
 from datetime import datetime
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
+from datetime import datetime
 
 # Načtení environmentálních proměnných ze souboru .env
 load_dotenv()
@@ -101,3 +102,10 @@ async def end_conversation():
 @app.get("/")
 async def root():
     return {"message": "NAO robot API is running"}
+
+
+
+@app.get("/time")
+async def time():
+    now = datetime.now().__format__('%Y-%m-%d %H:%M:%S')
+    return {"Current time":f"{now}"}
