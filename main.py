@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Body
+from fastapi import FastAPI, Depends, HTTPException, status, Body, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
 from jose import JWTError, jwt
@@ -7,9 +7,13 @@ from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 from bson import ObjectId
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Deque
+from collections import deque
+from fastapi.responses import StreamingResponse
+from openai import OpenAI
 import os
 from dotenv import load_dotenv
+
 
 # Načtení environmentálních proměnných ze souboru .env
 load_dotenv()
