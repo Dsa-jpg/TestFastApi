@@ -5,3 +5,5 @@ python-dotenv
 openai
 pymongo[srv]
 dnspython
+python-jose[cryptography] 
+passlib[bcrypt]
