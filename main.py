@@ -165,7 +165,7 @@ async def protected_endpoint(current_user: UserInDB = Depends(get_current_user))
     return {"message": f"Hello {current_user.username}, you have access to this protected endpoint!"}
 
 @app.post("/sendquery")
-async def send_query(request: Request):
+async def send_query(request: Request,current_user: dict = Depends(get_current_user)):
     body = await request.json()
     model = body.get("model")
     user_message = body.get("user_message")
@@ -190,7 +190,7 @@ async def send_query(request: Request):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
       
-@app.post("/endconversation")
+@app.post("/endconversation",current_user: dict = Depends(get_current_user))
 async def end_conversation():
     if not context:
         raise HTTPException(status_code=400, detail="No conversation context available.")
