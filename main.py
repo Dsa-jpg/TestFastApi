@@ -190,8 +190,8 @@ async def send_query(request: Request,current_user: dict = Depends(get_current_u
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
       
-@app.post("/endconversation",current_user: dict = Depends(get_current_user))
-async def end_conversation():
+@app.post("/endconversation")
+async def end_conversation(current_user: dict = Depends(get_current_user)):
     if not context:
         raise HTTPException(status_code=400, detail="No conversation context available.")
     # Připravíme shrnutí konverzace
